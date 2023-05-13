@@ -1,0 +1,5 @@
+
+.idea/
+laravel_playground.iml
+
+.docker/db/data/*
