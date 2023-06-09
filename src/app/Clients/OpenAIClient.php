@@ -2,44 +2,38 @@
 
 namespace App\Clients;
 
+use App\Domains\Model\ChatMessage;
 use OpenAI\Client;
 
-class OpenAIClient
+class OpenAIClient implements ApiClientInterface
 {
-    private static $instance = null;
-    private static $client = null;
-    private static $API_KEY = '';
+    private static Client $client;
+    private static string $API_KEY = '';
 
-    private function __construct() {}
-
-    public static function instantiate(): self
-    {
+    public function __construct() {
         self::$API_KEY = config('config.API_KEY');
         if (empty(self::$API_KEY)) {
             throw new \ValueError("API KEY isn't provided");
         }
 
-        if (is_null(self::$instance)) {
-            self::$instance = new self();
-        }
-
-        if (is_null(self::$client)) {
-            self::$client = \OpenAI::client(self::$API_KEY);
-        }
-
-        return self::$instance;
+        self::$client = \OpenAI::client(self::$API_KEY);
     }
 
-    public function postMessage(array $messages): array
+    public function postMessage(array $messages): ChatMessage
     {
         $response = self::$client->chat()->create([
             'model' => 'gpt-3.5-turbo',
-            'messages' => $messages
+            'messages' => array_map(function ($message) {
+                return [
+                    'role' => $message->role,
+                    'content' => $message->message,
+                ];
+            }, $messages),
         ]);
-        foreach ($response->choices as $choice) {
-            \Log::info($choice->message->content);
-        }
 
-        return ['role' => $response->choices[0]->message->role, 'content' => $response->choices[0]->message->content];
+        return new ChatMessage(
+            $response->choices[0]->message->role,
+            $response->choices[0]->message->content
+        );
     }
 }
