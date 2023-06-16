@@ -1,0 +1,25 @@
+controllers:
+  Item:
+    index:
+      resource: paginate:items
+
+    store:
+      validate: name, status, is_published
+      respond: 201
+
+    show:
+      resource: item
+
+    destroy:
+      delete: item
+
+  Sku:
+    resource: api
+
+  User:
+    invokable:
+      find: user.request->id
+      resource: user
+
+  Alert:
+    resource: api.index, api.show, api.destroy

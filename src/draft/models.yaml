@@ -1,0 +1,41 @@
+models:
+  User:
+    email: string:255 unique
+    password: string
+    softDeletes: true
+
+  Admin:
+    login_id: string:255
+    password: password string:100
+    is_activated: boolean default:true
+    softDeletes: true
+
+  SizeMaster:
+    name: string:100 unique
+    relationships:
+      hasMany: Sku
+
+  Item:
+    name: string:100 unique
+    status: enum:trashed,available,unavailable
+    is_published: boolean default:true
+    published_at: timestamp nullable
+    softDeletes: true
+
+    relationships:
+      hasMany: Sku
+
+  Sku:
+    is_published: boolean default:true
+    published_at: timestamp nullable
+    softDeletes: true
+    relationships:
+      belongsTo: Item, SizeMaster
+
+  Alert:
+    level: enum:danger,warn,info
+    content: longText
+    softDeletes: true
+
+seeders:
+  Item, Sku, Alert
