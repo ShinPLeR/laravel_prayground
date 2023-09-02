@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Response;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -46,5 +47,30 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, $e)
+    {
+        if ($request->is('/api/*')) {
+            return $this->apiError($request, $e);
+        }
+    }
+
+    public function apiError($request, Throwable $e): \Illuminate\Http\JsonResponse
+    {
+        $body = '';
+        $statusCode = 500;
+        if ($this->isHttpException($e)) {
+            $statusCode = $e->getStatusCode();
+            $body = match ($statusCode) {
+                Response::HTTP_BAD_REQUEST => 'Bad Request',
+                Response::HTTP_UNAUTHORIZED => 'Unauthorized',
+                Response::HTTP_FORBIDDEN => 'Forbidden',
+                Response::HTTP_NOT_FOUND => 'Not Found',
+                default => 'Internal Server Error',
+            };
+        }
+
+        return response()->json(['message' => $body], $statusCode);
     }
 }
