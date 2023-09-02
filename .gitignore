@@ -3,3 +3,4 @@
 laravel_playground.iml
 
 .docker/db/data/*
+.docker/redis/data/*

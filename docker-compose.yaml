@@ -6,6 +6,10 @@ services:
     build:
       context: .
       dockerfile: ./.docker/php/Dockerfile
+    depends_on:
+      - redis
+    links:
+      - redis
     volumes:
       - ./src:/var/www/app
 
@@ -38,3 +42,15 @@ services:
     volumes:
       - ./.docker/db/data:/var/lib/mysql
       - ./.docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
+
+  redis:
+    container_name: redis
+    build:
+      context: .
+      dockerfile: ./.docker/redis/Dockerfile
+    ports:
+      - "63790:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ./.docker/redis/data:/data
+      - ./.docker/redis/redis.conf:/etc/redis.conf
