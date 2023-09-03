@@ -13,6 +13,8 @@ class ResponseCachingMiddleware
 {
     protected string $key = 'Request-Cache-Id';
 
+    protected int $lifetime = 60;
+
     /**
      * Handle an incoming request.
      *
@@ -23,10 +25,11 @@ class ResponseCachingMiddleware
     public function handle(Request $request, Closure $next): mixed
     {
         if (! $request->hasHeader($this->key)) return $next($request);
-        $cache = Cache::get($request->header($this->key));
-        if (! $cache) return $next($request);
-        // TODO: JSON以外でも果たしていけるのか？（ファイルとか）
-        return $cache;
+        if ($cache = Cache::get($request->header($this->key))) {
+            return $cache;
+        }
+
+        return $next($request);
     }
 
     /**
@@ -39,10 +42,12 @@ class ResponseCachingMiddleware
     public function terminate(Request $request, Response|JsonResponse $response): void
     {
         if (! $request->hasHeader($this->key)) return;
-        // TODO: ここがゆるい
+        if (Cache::has($request->header($this->key))) return;
+
+        // TODO: ここがゆるい（キャッシュするのは正常レスポンスのみで良いとは思うが）
         if ($response->status() <= 399) {
             // TODO: サイズ問題が発生する？
-            Cache::set($request->header($this->key), $response);
+            Cache::put($request->header($this->key), $response, $ttl = now()->addMinutes($this->lifetime));
         }
     }
 }
