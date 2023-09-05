@@ -1,0 +1,32 @@
+@startuml
+
+participant Client as client
+participant Middleware as middleware
+database Storage as storage
+participant Controller as controller
+
+group First request [一意のリクエストIDをフロント側で生成し，リクエストへ付与する]
+    client -> middleware : 初回リクエスト
+    middleware -> storage : リクエストIDを元にキャッシュを探しにいく
+    storage -> storage : 有効期限内のレスポンスキャッシュを検索
+    storage -> middleware : 見つからず
+    middleware -> controller : 処理を移譲
+    controller -> controller : 通常通りに処理を行い，\nレスポンスを生成
+    controller -> middleware : nop.
+    middleware -> client : レスポンスを返却
+    middleware -> storage : 保存指示
+    storage -> storage : リクエストIDをキーに，\nレスポンスを保存
+end
+
+group Second request [初回のリクエスト時と同じリクエストIDがリクエストに付与されていることが前提]
+    client -> middleware : 2回目のリクエスト
+    middleware -> storage : リクエストIDを元にキャッシュを探しにいく
+    storage -> storage : 有効期限内のレスポンスキャッシュを検索
+    storage -> middleware : レスポンスキャッシュを返却
+    middleware -> client : 通常のレスポンスと同様にして返却
+end
+note right
+    Controllerを介さず，Middlewareから処理が返却される
+end note
+
+@enduml
