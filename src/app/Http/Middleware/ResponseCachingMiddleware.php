@@ -33,7 +33,7 @@ class ResponseCachingMiddleware
     }
 
     /**
-     * Handle response after response returned
+     * Handle response after returned
      *
      * @param Request $request
      * @param Response|JsonResponse $response
@@ -43,11 +43,10 @@ class ResponseCachingMiddleware
     {
         if (! $request->hasHeader($this->key)) return;
         if (Cache::has($request->header($this->key))) return;
-
         // TODO: ここがゆるい（キャッシュするのは正常レスポンスのみで良いとは思うが）
-        if ($response->status() <= 399) {
-            // TODO: サイズ問題が発生する？
-            Cache::put($request->header($this->key), $response, $ttl = now()->addMinutes($this->lifetime));
-        }
+        if ($response->status() > 399) return;
+
+        // TODO: サイズ問題が発生する？
+        Cache::put($request->header($this->key), $response, $ttl = now()->addMinutes($this->lifetime));
     }
 }
